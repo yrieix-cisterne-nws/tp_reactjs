@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TP ReactJS — Application Météo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f4f0;
+    --bg-tertiary: #eceae3;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --border: rgba(0,0,0,0.1);
+    --border-medium: rgba(0,0,0,0.18);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --teal-bg: #E1F5EE;
+    --teal-text: #085041;
+    --teal-accent: #1D9E75;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --blue-accent: #185FA5;
+    --purple-bg: #EEEDFE;
+    --purple-text: #3C3489;
+    --purple-border: #AFA9EC;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #2a2a2a;
+      --bg-tertiary: #141414;
+      --text-primary: #f0f0f0;
+      --text-secondary: #aaa;
+      --text-muted: #777;
+      --border: rgba(255,255,255,0.1);
+      --border-medium: rgba(255,255,255,0.2);
+      --teal-bg: #04342C;
+      --teal-text: #9FE1CB;
+      --blue-bg: #042C53;
+      --blue-text: #B5D4F4;
+      --blue-accent: #378ADD;
+      --purple-bg: #26215C;
+      --purple-text: #CECBF6;
+      --purple-border: #534AB7;
+      --amber-bg: #412402;
+      --amber-text: #FAC775;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  .header {
+    background: var(--bg-primary);
+    border-bottom: 0.5px solid var(--border);
+    padding: 1.25rem 2rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .header-title { font-size: 19px; font-weight: 600; }
+  .header-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+  .badge-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 6px; }
+
+  .badge {
+    font-size: 12px; font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 99px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+
+  .progress-wrap {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 12px;
+  }
+  .progress-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+  .progress-track {
+    flex: 1; height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--teal-accent);
+    border-radius: 99px;
+    transition: width 0.35s ease;
+  }
+  .progress-pct { font-size: 12px; color: var(--text-secondary); min-width: 36px; text-align: right; }
+
+  /* ── MAIN ────────────────────────────────── */
+  .main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+  /* ── INTRO ───────────────────────────────── */
+  .intro-card {
+    background: var(--blue-accent);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2rem;
+    color: #B5D4F4;
+  }
+  .intro-card h1 { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  .intro-card p { font-size: 14px; line-height: 1.7; }
+
+  .intro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px; margin-top: 1rem;
+  }
+  .intro-item {
+    background: rgba(255,255,255,0.13);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 13px; color: #E6F1FB;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .intro-item i { font-size: 20px; margin-top: 1px; flex-shrink: 0; }
+  .intro-item strong { display: block; font-weight: 600; color: #fff; margin-bottom: 2px; font-size: 14px; }
+
+  /* ── DAY SECTION ─────────────────────────── */
+  .day-section { margin-bottom: 2rem; }
+
+  .day-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .day-pill {
+    font-size: 12px; font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 0.5px solid var(--border-medium);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .day-line { flex: 1; height: 0.5px; background: var(--border); }
+
+  /* ── CARD ────────────────────────────────── */
+  .card {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+  .card.is-done { border-color: var(--teal-accent); }
+  .card.is-open { border-color: var(--blue-accent); }
+
+  .card-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .card-header:hover { background: var(--bg-secondary); }
+
+  .step-num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .num-todo { background: var(--bg-secondary); color: var(--text-secondary); }
+  .num-done { background: var(--teal-bg); color: var(--teal-text); }
+  .num-open { background: var(--blue-bg); color: var(--blue-text); }
+
+  .step-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .step-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+  .step-chevron {
+    font-size: 20px; color: var(--text-muted);
+    transition: transform 0.25s; flex-shrink: 0;
+  }
+  .step-chevron.open { transform: rotate(180deg); }
+
+  /* ── CARD BODY ───────────────────────────── */
+  .card-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 0.5px solid var(--border);
+  }
+  .card-body.open { display: block; }
+
+  .section-lbl {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 1.25rem 0 0.6rem;
+  }
+
+  /* objectives */
+  .obj-list { list-style: none; }
+  .obj-list li {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 14px; line-height: 1.6; padding: 3px 0;
+  }
+  .obj-list li i { color: var(--teal-accent); margin-top: 3px; flex-shrink: 0; }
+
+  /* tasks */
+  .task-list { list-style: none; }
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 14px; line-height: 1.6;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item.done { opacity: 0.5; text-decoration: line-through; }
+
+  .task-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 1.5px solid var(--border-medium);
+    background: var(--bg-primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 3px;
+    transition: all 0.15s;
+  }
+  .task-item.done .task-box {
+    background: var(--teal-accent);
+    border-color: var(--teal-accent);
+    color: #fff;
+  }
+
+  /* code block */
+  .code-block {
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.125rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px; line-height: 1.7;
+    overflow-x: auto; white-space: pre;
+    margin: 0.5rem 0;
+  }
+
+  /* tip */
+  .tip-box {
+    background: var(--teal-bg);
+    border-left: 3px solid var(--teal-accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 0.75rem 1rem;
+    font-size: 13px; line-height: 1.6;
+    color: var(--teal-text);
+    margin: 0.75rem 0;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .tip-box i { flex-shrink: 0; margin-top: 2px; }
+
+  /* ai box */
+  .ai-box {
+    background: var(--purple-bg);
+    border: 0.5px solid var(--purple-border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  .ai-box-title {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--purple-text);
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ai-prompts { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+  .ai-btn {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--purple-border);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    font-size: 13px; line-height: 1.5;
+    cursor: pointer; text-align: left;
+    color: var(--purple-text);
+    display: flex; align-items: flex-start; gap: 8px;
+    transition: background 0.15s;
+    font-family: inherit; width: 100%;
+  }
+  .ai-btn:hover { background: var(--purple-bg); filter: brightness(0.95); }
+  .ai-btn i { flex-shrink: 0; margin-top: 2px; font-size: 16px; }
+
+  .ai-notice {
+    font-size: 11px; color: var(--purple-text);
+    opacity: 0.7; margin-top: 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* done btn */
+  .mark-btn {
+    margin-top: 1rem;
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    font-size: 13px; cursor: pointer;
+    color: var(--text-primary);
+    font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .mark-btn:hover { background: var(--bg-secondary); }
+  .mark-btn.marked { background: var(--teal-bg); border-color: var(--teal-accent); color: var(--teal-text); }
+
+  /* footer */
+  .footer {
+    text-align: center;
+    font-size: 12px; color: var(--text-muted);
+    padding: 2rem 0 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .header { padding: 1rem; }
+    .main { padding: 1.25rem 1rem 4rem; }
+    .header-title { font-size: 16px; }
+  }
+
+  @media print {
+    .header { position: static; box-shadow: none; }
+    .card-body { display: block !important; }
+    .step-chevron { display: none; }
+    .ai-btn { display: none; }
+    .mark-btn { display: none; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── STICKY HEADER ──────────────────────── -->
+<header class="header" role="banner">
+  <div class="header-top">
+    <div>
+      <div class="header-title">🌤 TP React — Application météo</div>
+      <div class="header-sub">Découverte de ReactJS · 2ème année développement</div>
+    </div>
+    <div class="badge-row">
+      <span class="badge badge-blue"><i class="ti ti-clock" aria-hidden="true"></i> 3 jours</span>
+      <span class="badge badge-teal"><i class="ti ti-code" aria-hidden="true"></i> JS requis</span>
+      <span class="badge badge-amber"><i class="ti ti-brain" aria-hidden="true"></i> IA intégrée</span>
+    </div>
+  </div>
+  <div class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar">
+    <span class="progress-label">Progression des tâches</span>
+    <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+    <span class="progress-pct" id="ppct">0 %</span>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- ── INTRO ──────────────────────────────── -->
+  <div class="intro-card" role="region" aria-label="Présentation du TP">
+    <h1>Bienvenue dans votre TP React !</h1>
+    <p>Vous allez construire une <strong style="color:#fff">application météo complète</strong>, étape par étape. Chaque partie vous fait découvrir les concepts fondamentaux de React de façon progressive. À la fin de chaque étape, des suggestions de questions vous permettent d'explorer chaque notion en profondeur avec une IA.</p>
+    <div class="intro-grid">
+      <div class="intro-item"><i class="ti ti-building" aria-hidden="true"></i><div><strong>Jour 1</strong>Fondations React &amp; composants</div></div>
+      <div class="intro-item"><i class="ti ti-refresh" aria-hidden="true"></i><div><strong>Jour 2</strong>État, effets &amp; API réelle</div></div>
+      <div class="intro-item"><i class="ti ti-sparkles" aria-hidden="true"></i><div><strong>Jour 3</strong>Routing, contexte &amp; déploiement</div></div>
+    </div>
+  </div>
+
+  <div id="steps-root"></div>
+
+  <footer class="footer">
+    <p>TP ReactJS · Progression sauvegardée localement dans votre navigateur</p>
+  </footer>
+
+</main>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    day: "Jour 1 — Fondations &amp; Composants",
+    id: "s1",
+    title: "Mise en place de l'environnement",
+    sub: "Vite, structure du projet, premier Hello World",
+    objectives: [
+      "Installer Node.js et comprendre son rôle",
+      "Créer un projet React avec Vite",
+      "Comprendre la structure de fichiers générée",
+      "Lancer le serveur de développement"
+    ],
+    tasks: [
+      "Vérifier que Node.js est installé : <code>node -v</code> et <code>npm -v</code> dans le terminal",
+      "Créer le projet : <code>npm create vite@latest meteo-app -- --template react</code>",
+      "Se déplacer dans le dossier et installer les dépendances : <code>cd meteo-app &amp;&amp; npm install</code>",
+      "Lancer le serveur de développement : <code>npm run dev</code> et ouvrir http://localhost:5173",
+      "Explorer les fichiers : <code>src/main.jsx</code>, <code>src/App.jsx</code>, <code>index.html</code>",
+      "Modifier App.jsx pour afficher votre prénom et observer le rechargement automatique"
+    ],
+    code: `// src/App.jsx — votre premier composant
+function App() {
+  return (
+    <div>
+      <h1>Mon application météo</h1>
+      <p>Prêt à commencer !</p>
+    </div>
+  )
+}
+
+export default App`,
+    tip: "Le rechargement automatique s'appelle le <strong>Hot Module Replacement (HMR)</strong>. Toute modification est reflétée instantanément dans le navigateur.",
+    ai: [
+      "Quelle est la différence entre React et un framework comme Vue ou Angular ? Quand choisir l'un plutôt que l'autre ?",
+      "À quoi sert le fichier main.jsx et pourquoi utilise-t-on ReactDOM.createRoot ? Explique ce qui se passe au démarrage d'une app React.",
+      "Pourquoi utiliser Vite plutôt que Create React App ? Quelles sont les différences concrètes en termes de vitesse et de configuration ?",
+      "C'est quoi exactement le JSX ? Est-ce du HTML ou du JavaScript ? Comment ça fonctionne sous le capot ?"
+    ]
+  },
+  {
+    day: null,
+    id: "s2",
+    title: "Mon premier composant",
+    sub: "Anatomie d'un composant, props, JSX",
+    objectives: [
+      "Créer un composant React fonctionnel",
+      "Comprendre et utiliser les props",
+      "Maîtriser la syntaxe JSX vs HTML",
+      "Importer et composer des composants"
+    ],
+    tasks: [
+      "Créer le fichier <code>src/components/WeatherCard.jsx</code>",
+      "Écrire un composant qui reçoit les props : <code>city</code>, <code>temperature</code>, <code>description</code>",
+      "Afficher ces données dans une carte stylisée avec du CSS inline ou un fichier .css",
+      "Importer WeatherCard dans App.jsx et l'utiliser avec des données en dur",
+      "Créer 3 instances de WeatherCard avec des villes différentes",
+      "Ajouter une prop <code>icon</code> (emoji météo : ☀️ 🌧️ ⛅) et l'afficher dans la carte"
+    ],
+    code: `// src/components/WeatherCard.jsx
+function WeatherCard({ city, temperature, description, icon }) {
+  return (
+    <div className="weather-card">
+      <span className="icon">{icon}</span>
+      <h2>{city}</h2>
+      <p className="temp">{temperature}°C</p>
+      <p className="desc">{description}</p>
+    </div>
+  )
+}
+
+export default WeatherCard
+
+// Utilisation dans App.jsx :
+// <WeatherCard city="Paris" temperature={18}
+//   description="Nuageux" icon="⛅" />`,
+    tip: "En JSX, les attributs HTML changent de nom : <code>class</code> devient <code>className</code>, <code>for</code> devient <code>htmlFor</code>. Les expressions JavaScript s'écrivent entre accolades <code>{ }</code>.",
+    ai: [
+      "Quelle est la différence entre les props et les attributs HTML classiques ? Peut-on passer n'importe quel type de valeur dans une prop ?",
+      "Pourquoi les composants React doivent-ils retourner un seul élément racine ? Qu'est-ce qu'un Fragment et quand l'utiliser ?",
+      "Comment fonctionne la destructuration des props dans les paramètres de fonction ? Montre-moi les différentes façons d'écrire ça.",
+      "Quelle est la différence entre un composant déclaré avec function et un composant arrow function ? Y a-t-il une bonne pratique ?"
+    ]
+  },
+  {
+    day: null,
+    id: "s3",
+    title: "Listes et rendu conditionnel",
+    sub: ".map(), clé unique, opérateurs conditionnels",
+    objectives: [
+      "Afficher une liste de données dynamiquement avec .map()",
+      "Comprendre l'importance des keys",
+      "Utiliser les opérateurs && et ternaire pour le rendu conditionnel",
+      "Structurer les données en tableau d'objets"
+    ],
+    tasks: [
+      "Créer dans App.jsx un tableau <code>weatherData</code> avec 5 villes (objets avec id, city, temp, desc, icon)",
+      "Remplacer les WeatherCard codées en dur par un <code>.map()</code> sur weatherData",
+      "Ajouter la prop <code>key={city.id}</code> sur chaque élément rendu",
+      "Créer un état 'showDetails' par carte (booléen) avec un bouton bascule",
+      "Afficher un message 'Aucune ville disponible' si le tableau est vide (avec <code>&amp;&amp;</code>)",
+      "Bonus : ajouter une couleur de fond différente selon si la température > 20°C (ternaire)"
+    ],
+    code: `const weatherData = [
+  { id: 1, city: "Paris", temp: 18, desc: "Nuageux", icon: "⛅" },
+  { id: 2, city: "Lyon", temp: 22, desc: "Ensoleillé", icon: "☀️" },
+  { id: 3, city: "Brest", temp: 14, desc: "Pluvieux", icon: "🌧️" },
+]
+
+// Dans le JSX :
+{weatherData.length > 0
+  ? weatherData.map(city => (
+      <WeatherCard key={city.id} {...city} />
+    ))
+  : <p>Aucune ville disponible</p>
+}`,
+    tip: "La prop <code>key</code> doit être unique parmi les frères (siblings). React l'utilise pour optimiser les re-rendus. N'utilisez jamais l'index du tableau comme key si la liste peut changer d'ordre.",
+    ai: [
+      "Pourquoi React a-t-il besoin d'une key unique dans les listes ? Que se passe-t-il concrètement si on l'omet ou si elle n'est pas unique ?",
+      "Quelles sont toutes les façons de faire du rendu conditionnel en React ? Quand utiliser if, &&, le ternaire ou switch ?",
+      "C'est quoi le spread operator {...city} dans les props ? Est-ce une bonne pratique ou faut-il l'éviter ?",
+      "Comment fonctionne la réconciliation du DOM virtuel de React ? Explique-moi le processus de 'diffing'."
+    ]
+  },
+  {
+    day: "Jour 2 — État, Effets &amp; API",
+    id: "s4",
+    title: "État avec useState",
+    sub: "Hook useState, réactivité, formulaire de recherche",
+    objectives: [
+      "Comprendre le concept d'état (state) en React",
+      "Utiliser le hook useState",
+      "Gérer les événements utilisateur",
+      "Créer un champ de recherche fonctionnel"
+    ],
+    tasks: [
+      "Ajouter un <code>useState</code> pour stocker le terme de recherche (<code>searchTerm</code>)",
+      "Créer un input contrôlé lié à <code>searchTerm</code> via <code>value</code> et <code>onChange</code>",
+      "Filtrer <code>weatherData</code> selon searchTerm (insensible à la casse)",
+      "Ajouter un bouton 'Effacer' qui réinitialise searchTerm à ''",
+      "Créer un useState pour 'selectedCity' et afficher ses détails sous la liste",
+      "Afficher le nombre de résultats : '{n} ville(s) trouvée(s)'"
+    ],
+    code: `import { useState } from 'react'
+
+function App() {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCity, setSelectedCity] = useState(null)
+
+  const filteredCities = weatherData.filter(city =>
+    city.city.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  return (
+    <>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Rechercher une ville..."
+      />
+      <p>{filteredCities.length} ville(s) trouvée(s)</p>
+      {filteredCities.map(city => (
+        <WeatherCard key={city.id} {...city}
+          onClick={() => setSelectedCity(city)} />
+      ))}
+    </>
+  )
+}`,
+    tip: "Un composant se re-rend à chaque appel de <code>setState</code>. React ne modifie pas directement l'état — il planifie une mise à jour et recalcule le JSX à afficher.",
+    ai: [
+      "Qu'est-ce qu'un 'input contrôlé' (controlled input) en React ? Quelle est la différence avec un input non contrôlé ?",
+      "Pourquoi ne faut-il jamais muter directement l'état (state) en React ? Que se passe-t-il si on écrit state.property = value ?",
+      "Comment React décide-t-il de re-rendre un composant ? Tous les enfants sont-ils re-rendus à chaque fois ?",
+      "C'est quoi le batching des mises à jour d'état ? React regroupe-t-il plusieurs setState en un seul rendu ?"
+    ]
+  },
+  {
+    day: null,
+    id: "s5",
+    title: "Effets avec useEffect",
+    sub: "Cycle de vie, dépendances, fetch API",
+    objectives: [
+      "Comprendre le cycle de vie d'un composant",
+      "Utiliser le hook useEffect",
+      "Faire un appel API avec fetch (Open-Meteo, gratuit, sans clé)",
+      "Gérer les états de chargement et d'erreur"
+    ],
+    tasks: [
+      "Créer les états : <code>loading</code> (booléen), <code>error</code> (null ou string), <code>weatherData</code> (tableau)",
+      "Utiliser <code>useEffect</code> pour appeler l'API Open-Meteo au chargement du composant",
+      "Afficher un spinner ou 'Chargement...' pendant <code>loading === true</code>",
+      "Afficher un message d'erreur si la requête échoue (try/catch)",
+      "Ajouter un bouton 'Actualiser' qui relance le fetch (via un état 'refresh')",
+      "Bonus : utiliser une <code>AbortController</code> pour annuler le fetch si le composant est démonté"
+    ],
+    code: `// URL gratuite, sans clé API
+const API_URL =
+  'https://api.open-meteo.com/v1/forecast' +
+  '?latitude=48.85&longitude=2.35' +
+  '&current=temperature_2m,weathercode'
+
+useEffect(() => {
+  const controller = new AbortController()
+
+  const fetchWeather = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(API_URL,
+        { signal: controller.signal })
+      if (!res.ok) throw new Error('Erreur réseau')
+      const data = await res.json()
+      setWeatherData(data.current)
+    } catch (err) {
+      if (err.name !== 'AbortError')
+        setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchWeather()
+  return () => controller.abort()
+}, [])`,
+    tip: "La fonction de retour (cleanup) de <code>useEffect</code> est appelée quand le composant est démonté. C'est là qu'on annule les requêtes, nettoie les timers ou les abonnements.",
+    ai: [
+      "Explique-moi le tableau de dépendances de useEffect. Que se passe-t-il si je le laisse vide ? Si je l'omets ? Si je mets une variable dedans ?",
+      "Pourquoi ne peut-on pas passer une fonction async directement à useEffect ? Comment contourner ça proprement ?",
+      "Quand faut-il utiliser useEffect vs un simple appel de fonction dans le composant ? Comment choisir ?",
+      "C'est quoi le problème du 'stale closure' dans useEffect ? Montre-moi un exemple concret et comment l'éviter."
+    ]
+  },
+  {
+    day: null,
+    id: "s6",
+    title: "Composants réutilisables",
+    sub: "Composition, children, callbacks, prop drilling",
+    objectives: [
+      "Extraire des composants pour éviter la répétition (DRY)",
+      "Utiliser la prop children",
+      "Passer des fonctions comme props (callbacks)",
+      "Identifier et comprendre le prop drilling"
+    ],
+    tasks: [
+      "Créer un composant <code>Card</code> générique avec une prop <code>children</code>",
+      "Créer un composant <code>SearchBar</code> qui reçoit <code>value</code> et <code>onChange</code> en props",
+      "Créer des composants <code>LoadingSpinner</code> et <code>ErrorMessage</code> réutilisables",
+      "Créer un composant <code>WeatherDetail</code> qui affiche les infos détaillées d'une ville",
+      "Refactoriser App.jsx pour utiliser tous ces nouveaux composants",
+      "Identifier où commence le 'prop drilling' dans votre arborescence de composants"
+    ],
+    code: `// Composant Card générique avec children
+function Card({ children, className = '' }) {
+  return (
+    <div className={\`card \${className}\`}>
+      {children}
+    </div>
+  )
+}
+
+// Composant SearchBar
+function SearchBar({ value, onChange, onClear }) {
+  return (
+    <div className="search-bar">
+      <input value={value} onChange={onChange}
+        placeholder="Rechercher..." />
+      {value && (
+        <button onClick={onClear}>✕</button>
+      )}
+    </div>
+  )
+}
+
+// Utilisation
+<SearchBar
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  onClear={() => setSearchTerm('')}
+/>`,
+    tip: "Si vous passez la même prop à travers 3 niveaux de composants ou plus, c'est du <strong>prop drilling</strong>. C'est le signal que vous avez besoin du Contexte ou d'un state manager.",
+    ai: [
+      "Quelle est la différence entre la composition de composants et l'héritage ? Pourquoi React favorise-t-il la composition ?",
+      "C'est quoi le prop drilling et pourquoi est-ce un problème ? Quelles sont toutes les solutions pour l'éviter ?",
+      "Quand doit-on extraire un composant ? Y a-t-il des règles ou des signaux clairs pour savoir quand le faire ?",
+      "Qu'est-ce que le principe de responsabilité unique appliqué aux composants React ?"
+    ]
+  },
+  {
+    day: "Jour 3 — Routing, Contexte &amp; Finalisation",
+    id: "s7",
+    title: "React Router",
+    sub: "Navigation, routes, paramètres d'URL",
+    objectives: [
+      "Installer et configurer React Router v6",
+      "Créer plusieurs pages dans l'application",
+      "Utiliser les paramètres d'URL avec useParams",
+      "Créer une navigation cohérente entre les pages"
+    ],
+    tasks: [
+      "Installer React Router : <code>npm install react-router-dom</code>",
+      "Créer les pages : <code>src/pages/Home.jsx</code>, <code>CityDetail.jsx</code>, <code>About.jsx</code>",
+      "Configurer les routes dans main.jsx avec <code>BrowserRouter</code>, <code>Routes</code> et <code>Route</code>",
+      "Créer un composant <code>Navigation</code> avec des liens <code>&lt;Link&gt;</code>",
+      "Configurer la route <code>/city/:cityName</code> et lire le paramètre avec <code>useParams()</code>",
+      "Ajouter une route 404 (chemin <code>*</code>) avec un message adapté",
+      "Utiliser <code>useNavigate()</code> pour rediriger depuis un bouton"
+    ],
+    code: `// main.jsx
+import { BrowserRouter, Routes, Route }
+  from 'react-router-dom'
+
+ReactDOM.createRoot(
+  document.getElementById('root')
+).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/city/:cityName"
+        element={<CityDetail />} />
+      <Route path="/about" element={<About />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
+)
+
+// Dans CityDetail.jsx :
+import { useParams, useNavigate }
+  from 'react-router-dom'
+
+function CityDetail() {
+  const { cityName } = useParams()
+  const navigate = useNavigate()
+
+  return (
+    <div>
+      <h1>Météo — {cityName}</h1>
+      <button onClick={() => navigate(-1)}>
+        ← Retour
+      </button>
+    </div>
+  )
+}`,
+    tip: "Préférez <code>&lt;Link&gt;</code> à <code>&lt;a href&gt;</code> pour la navigation interne. <code>&lt;a href&gt;</code> recharge toute la page, tandis que <code>&lt;Link&gt;</code> fait une navigation côté client sans rechargement.",
+    ai: [
+      "Quelle est la différence entre BrowserRouter et HashRouter ? Dans quel cas utiliser l'un ou l'autre ?",
+      "Comment fonctionne le routing côté client (SPA) ? Comment le serveur sait-il quelle page servir si l'URL change ?",
+      "Qu'est-ce que le lazy loading de routes avec React.lazy() et Suspense ? Quand est-ce vraiment utile ?",
+      "Comment gérer l'authentification avec React Router ? Montre-moi le pattern de 'Protected Route'."
+    ]
+  },
+  {
+    day: null,
+    id: "s8",
+    title: "Context API",
+    sub: "Partage d'état global, useContext, Provider",
+    objectives: [
+      "Comprendre le problème du prop drilling",
+      "Créer et utiliser un Context React",
+      "Implémenter un thème clair/sombre global",
+      "Créer un hook personnalisé pour consommer le contexte"
+    ],
+    tasks: [
+      "Créer <code>src/contexts/ThemeContext.jsx</code> avec <code>createContext</code> et un <code>ThemeProvider</code>",
+      "Ajouter un état <code>theme</code> (light/dark) dans le Provider",
+      "Envelopper l'application dans <code>ThemeProvider</code> dans main.jsx",
+      "Créer un hook personnalisé <code>useTheme()</code> pour consommer le contexte",
+      "Ajouter un bouton de bascule thème dans la Navigation",
+      "Appliquer le thème avec des variables CSS ou des classes sur le <code>&lt;body&gt;</code>"
+    ],
+    code: `// src/contexts/ThemeContext.jsx
+import { createContext, useContext, useState }
+  from 'react'
+
+const ThemeContext = createContext(null)
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light')
+
+  const toggleTheme = () =>
+    setTheme(t => t === 'light' ? 'dark' : 'light')
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      <div data-theme={theme}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
+  )
+}
+
+// Hook personnalisé
+export function useTheme() {
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error(
+    'useTheme doit être utilisé dans ThemeProvider'
+  )
+  return ctx
+}`,
+    tip: "La Context API est idéale pour les données globales peu changeantes (thème, langue, utilisateur connecté). Pour un état complexe qui change souvent, envisagez <strong>Zustand</strong> ou Redux.",
+    ai: [
+      "Quand faut-il utiliser le Context plutôt que des props ? Et quand vaut-il mieux éviter le Context ?",
+      "Pourquoi dit-on que le Context peut causer des problèmes de performance ? Comment les éviter ?",
+      "Quelle est la différence entre Context API et Redux / Zustand ? Quand passer à une vraie librairie de state management ?",
+      "Qu'est-ce qu'un hook personnalisé et comment le créer ? Quelles règles faut-il respecter (les 'Rules of Hooks') ?"
+    ]
+  },
+  {
+    day: null,
+    id: "s9",
+    title: "Finalisation &amp; déploiement",
+    sub: "Build de production, optimisation, Netlify/Vercel",
+    objectives: [
+      "Créer un build de production optimisé",
+      "Comprendre les outils de performance React",
+      "Déployer l'application en ligne",
+      "Écrire un README professionnel"
+    ],
+    tasks: [
+      "Lancer <code>npm run build</code> et explorer le dossier <code>dist/</code> généré",
+      "Tester le build en local : <code>npm run preview</code>",
+      "Analyser la taille du bundle (installer <code>rollup-plugin-visualizer</code> si souhaité)",
+      "Créer un compte Netlify ou Vercel et déployer via interface web ou CLI",
+      "Configurer un fichier <code>_redirects</code> (Netlify) ou <code>vercel.json</code> pour le routing SPA",
+      "Écrire un <code>README.md</code> avec : description, captures d'écran, installation, fonctionnalités",
+      "Bonus : utiliser <code>React.memo()</code> sur WeatherCard pour éviter les re-rendus inutiles"
+    ],
+    code: `# Commandes essentielles
+npm run build     # Génère dist/ optimisé
+npm run preview   # Teste le build localement
+
+# Pour Netlify (routing SPA)
+# Créer public/_redirects :
+/*    /index.html    200
+
+# Pour Vercel (routing SPA)
+# Créer vercel.json :
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
+
+# Déploiement CLI Netlify
+npm install -g netlify-cli
+netlify deploy --prod --dir=dist`,
+    tip: "Le dossier <code>dist/</code> contient votre application optimisée : JS minifié, assets hashés pour le cache. Ne commitez pas <code>dist/</code> dans git — ajoutez-le à votre <code>.gitignore</code>.",
+    ai: [
+      "Qu'est-ce que le tree-shaking et comment Vite/Rollup l'applique lors du build ? Pourquoi c'est important ?",
+      "C'est quoi le code splitting et le lazy loading en React ? Comment les implémenter avec React.lazy() et Suspense ?",
+      "Quelles sont les principales métriques de performance web (Core Web Vitals) et comment React les impacte-t-il ?",
+      "Comment fonctionne React.memo() ? Quelle est la différence avec useMemo() et useCallback() ?"
+    ]
+  }
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+const LS_KEY = 'tp_react_progress_v1';
+let state = { open: null, doneTasks: {}, doneSteps: {} };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) state = { ...state, ...JSON.parse(raw) };
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// ─── PROGRESS ──────────────────────────────────────────────────────────────
+function updateProgress() {
+  const total = STEPS.reduce((a, s) => a + s.tasks.length, 0);
+  const done = Object.values(state.doneTasks).filter(Boolean).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('pfill').style.width = pct + '%';
+  document.getElementById('ppct').textContent = pct + ' %';
+  document.getElementById('progressbar').setAttribute('aria-valuenow', pct);
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('steps-root');
+  let html = '';
+  let lastDay = null;
+  let dayOpen = false;
+
+  STEPS.forEach((step, si) => {
+    if (step.day !== null) {
+      if (dayOpen) html += '</div>';
+      html += `<div class="day-section">
+        <div class="day-header">
+          <span class="day-pill">${step.day}</span>
+          <div class="day-line"></div>
+        </div>`;
+      dayOpen = true;
+    }
+
+    const isDone = !!state.doneSteps[step.id];
+    const isOpen = state.open === step.id;
+    const numCls = isDone ? 'num-done' : isOpen ? 'num-open' : 'num-todo';
+    const numContent = isDone ? '<i class="ti ti-check" aria-hidden="true"></i>' : (si + 1);
+    const cardCls = isDone ? 'is-done' : isOpen ? 'is-open' : '';
+    const chevCls = isOpen ? 'open' : '';
+
+    html += `<div class="card ${cardCls}" id="card-${step.id}">
+      <div class="card-header" onclick="toggle('${step.id}')" role="button" aria-expanded="${isOpen}" aria-controls="body-${step.id}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggle('${step.id}')">
+        <div class="step-num ${numCls}" aria-hidden="true">${numContent}</div>
+        <div style="flex:1">
+          <div class="step-title">${step.title}</div>
+          <div class="step-sub">${step.sub}</div>
+        </div>
+        <i class="ti ti-chevron-down step-chevron ${chevCls}" aria-hidden="true"></i>
+      </div>
+      <div class="card-body ${isOpen ? 'open' : ''}" id="body-${step.id}">`;
+
+    // objectives
+    html += `<div class="section-lbl">Objectifs</div>
+      <ul class="obj-list">
+        ${step.objectives.map(o => `<li><i class="ti ti-circle-check" aria-hidden="true"></i><span>${o}</span></li>`).join('')}
+      </ul>`;
+
+    // tasks
+    html += `<div class="section-lbl">Tâches à réaliser</div>
+      <ul class="task-list">`;
+    step.tasks.forEach((t, ti) => {
+      const tid = `${step.id}_t${ti}`;
+      const done = !!state.doneTasks[tid];
+      html += `<li class="task-item ${done ? 'done' : ''}" onclick="toggleTask('${tid}')" role="checkbox" aria-checked="${done}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTask('${tid}')">
+        <div class="task-box" aria-hidden="true">${done ? '<i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i>' : ''}</div>
+        <span>${t}</span>
+      </li>`;
+    });
+    html += `</ul>`;
+
+    // code
+    html += `<div class="section-lbl">Exemple de code</div>
+      <div class="code-block">${escHtml(step.code)}</div>`;
+
+    // tip
+    html += `<div class="tip-box"><i class="ti ti-bulb" aria-hidden="true"></i><span><strong>Astuce :</strong> ${step.tip}</span></div>`;
+
+    // ai box
+    html += `<div class="ai-box">
+      <div class="ai-box-title"><i class="ti ti-sparkles" aria-hidden="true"></i> Creuser avec l'IA</div>
+      <ul class="ai-prompts">
+        ${step.ai.map(q => `<li><button class="ai-btn" onclick="copyPrompt(this, ${JSON.stringify(q)})"><i class="ti ti-clipboard" aria-hidden="true"></i><span>${q}</span></button></li>`).join('')}
+      </ul>
+      <div class="ai-notice"><i class="ti ti-info-circle" aria-hidden="true"></i> Cliquez sur une question pour la copier, puis collez-la dans votre IA préférée (Claude, ChatGPT, etc.)</div>
+    </div>`;
+
+    // mark done
+    html += `<button class="mark-btn ${isDone ? 'marked' : ''}" onclick="markDone('${step.id}')">
+      <i class="ti ti-${isDone ? 'check' : 'circle-check'}" aria-hidden="true"></i>
+      ${isDone ? 'Étape terminée !' : 'Marquer comme terminé'}
+    </button>`;
+
+    html += `</div></div>`;
+  });
+
+  if (dayOpen) html += '</div>';
+  root.innerHTML = html;
+  updateProgress();
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggle(id) {
+  state.open = state.open === id ? null : id;
+  saveState();
+  render();
+  if (state.open) {
+    setTimeout(() => {
+      const el = document.getElementById('card-' + id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+}
+
+function toggleTask(tid) {
+  state.doneTasks[tid] = !state.doneTasks[tid];
+  saveState();
+  render();
+}
+
+function markDone(id) {
+  state.doneSteps[id] = !state.doneSteps[id];
+  saveState();
+  render();
+}
+
+function copyPrompt(btn, text) {
+  const fullText = text + '\n\n(Contexte : je découvre ReactJS en TP, 2ème année développement)';
+  navigator.clipboard.writeText(fullText).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i><span>Copié !</span>';
+    btn.style.background = 'var(--teal-bg)';
+    btn.style.borderColor = 'var(--teal-accent)';
+    btn.style.color = 'var(--teal-text)';
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 1800);
+  }).catch(() => {
+    // fallback: select text
+    const ta = document.createElement('textarea');
+    ta.value = fullText;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+loadState();
+render();
+</script>
+</body>
+</html>
