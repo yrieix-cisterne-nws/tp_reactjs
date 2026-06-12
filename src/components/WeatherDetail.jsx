@@ -5,13 +5,12 @@ function WeatherDetail({ temperature, description, icon }) {
 
   return (
     <>
-      <p className="temp">
+      <p className="pb-2">
         {temperature}°C <span className="icon">{icon}</span>
       </p>
       <button
         onClick={() => setShowDescription(!showDescription)}
-        className="text-black bg-white rounded-lg p-1"
-      >
+        className="text-black bg-white rounded-lg p-1">
         Description
       </button>
       <p className={showDescription ? "" : "hidden"}>{description}</p>
